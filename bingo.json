@@ -1,5 +1,7 @@
-[
-  "Alguien se pierde mientras vamos al camerino",
+{
+  "id": "bingo-concierto-001",
+  "options": [
+    "Alguien se pierde mientras vamos al camerino",
   "Alguien se desmaya",
   "Cristopher aumenta el tempo",
   "Emmanuel se le va una nota",
@@ -26,4 +28,5 @@
   "Salimos tristes de tocar",
   "A usted lo parlan",
   "A alguien se le queda la escarapela"
-]
+  ]
+}
