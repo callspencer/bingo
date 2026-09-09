@@ -299,17 +299,17 @@ const JSON_URL = "./bingo.json";
     ]
   }
 
-  El "id" forma parte de la ubicación de guardado del navegador.
-  Si cambias el id, el bingo se considera una versión completamente nueva:
+  El "id" identifica la partida guardada.
+  Si cambias el id, la partida anterior deja de ser válida:
   se crea otra distribución y empieza sin casillas marcadas.
 */
-let STORAGE_PREFIX = "";
-let BOARD_KEY = "";
-let CHECKED_KEY = "";
-let LOCAL_OPTIONS_KEY = "";
+const STATE_KEY = "bingo_state_v3";
+const LOCAL_OPTIONS_KEY = "bingo_local_options_v3";
 
+let BINGO_ID = "";
 let board = [];
 let checked = new Set();
+
 let globalOptions = [];
 
 function shuffle(array) {
@@ -365,13 +365,7 @@ async function loadOptions() {
 
   const id = data.id.trim();
 
-  // Solo caracteres seguros para usar como parte de una clave local.
-  const safeId = id.replace(/[^a-zA-Z0-9_-]/g, "_");
-
-  STORAGE_PREFIX = `bingo_${safeId}_v2`;
-  BOARD_KEY = `${STORAGE_PREFIX}_board`;
-  CHECKED_KEY = `${STORAGE_PREFIX}_checked`;
-  LOCAL_OPTIONS_KEY = `${STORAGE_PREFIX}_local_options`;
+  BINGO_ID = id;
 
   const options = normalizeOptions(data);
 
@@ -383,48 +377,47 @@ async function loadOptions() {
   return options;
 }
 
+function saveState() {
+  localStorage.setItem(STATE_KEY, JSON.stringify({
+    id: BINGO_ID,
+    board: board,
+    checked: [...checked]
+  }));
+}
+
 function createBoard(options) {
-  // Se seleccionan 25 opciones de todas las disponibles.
-  // Si hay 27, dos quedan fuera y cambian de persona a persona.
+  // Se seleccionan exactamente 25 opciones.
+  // El ID del JSON queda guardado junto con el tablero.
   const newBoard = shuffle(options).slice(0, 25);
 
-  localStorage.setItem(BOARD_KEY, JSON.stringify(newBoard));
-  localStorage.setItem(CHECKED_KEY, JSON.stringify([]));
+  board = newBoard;
+  checked = new Set();
 
+  saveState();
   return newBoard;
 }
 
-function loadSavedBoard() {
+function loadSavedState() {
   try {
-    const saved = JSON.parse(localStorage.getItem(BOARD_KEY) || "null");
+    const saved = JSON.parse(localStorage.getItem(STATE_KEY) || "null");
 
-    if (Array.isArray(saved) && saved.length === 25) {
+    /*
+      MUY IMPORTANTE:
+      El tablero solo es válido si pertenece al mismo ID
+      que actualmente tiene bingo.json.
+    */
+    if (
+      saved &&
+      saved.id === BINGO_ID &&
+      Array.isArray(saved.board) &&
+      saved.board.length === 25 &&
+      Array.isArray(saved.checked)
+    ) {
       return saved;
     }
   } catch {}
 
   return null;
-}
-
-function loadChecked() {
-  try {
-    const saved = JSON.parse(localStorage.getItem(CHECKED_KEY) || "[]");
-
-    if (Array.isArray(saved)) {
-      return new Set(
-        saved.filter(index => Number.isInteger(index) && index >= 0 && index < 25)
-      );
-    }
-  } catch {}
-
-  return new Set();
-}
-
-function saveChecked() {
-  localStorage.setItem(
-    CHECKED_KEY,
-    JSON.stringify([...checked])
-  );
 }
 
 function render() {
@@ -477,15 +470,15 @@ async function start() {
   try {
     const options = await loadOptions();
 
-    const savedBoard = loadSavedBoard();
+    const savedState = loadSavedState();
 
-    if (savedBoard) {
-      board = savedBoard;
-      checked = loadChecked();
+    if (savedState) {
+      board = savedState.board;
+      checked = new Set(savedState.checked);
     } else {
-      // No existe una partida para este id: crear una nueva.
-      board = createBoard(options);
-      checked = new Set();
+      // El ID cambió o nunca hubo una partida para este ID.
+      // Esto crea automáticamente un bingo completamente nuevo.
+      createBoard(options);
     }
 
     render();
