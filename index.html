@@ -289,9 +289,24 @@
 <script>
 const JSON_URL = "./bingo.json";
 
-const BOARD_KEY = "bingo_board_v2";
-const CHECKED_KEY = "bingo_checked_v2";
-const LOCAL_OPTIONS_KEY = "bingo_local_options_v2";
+/*
+  bingo.json debe tener:
+  {
+    "id": "EL_STRING_QUE_TU_DECIDAS",
+    "options": [
+      "Opción 1",
+      "Opción 2"
+    ]
+  }
+
+  El "id" forma parte de la ubicación de guardado del navegador.
+  Si cambias el id, el bingo se considera una versión completamente nueva:
+  se crea otra distribución y empieza sin casillas marcadas.
+*/
+let STORAGE_PREFIX = "";
+let BOARD_KEY = "";
+let CHECKED_KEY = "";
+let LOCAL_OPTIONS_KEY = "";
 
 let board = [];
 let checked = new Set();
@@ -312,11 +327,11 @@ function normalizeOptions(data) {
   /*
     Acepta cualquiera de estos formatos:
 
-    1. Array directo:
-       ["Opción 1", "Opción 2", ...]
-
-    2. Objeto:
-       { "options": ["Opción 1", "Opción 2", ...] }
+    Formato esperado:
+    {
+      "id": "mi-bingo-2026",
+      "options": ["Opción 1", "Opción 2", ...]
+    }
   */
 
   const options = Array.isArray(data)
@@ -343,6 +358,21 @@ async function loadOptions() {
   }
 
   const data = await response.json();
+
+  if (!data || typeof data.id !== "string" || !data.id.trim()) {
+    throw new Error('bingo.json necesita un "id" único.');
+  }
+
+  const id = data.id.trim();
+
+  // Solo caracteres seguros para usar como parte de una clave local.
+  const safeId = id.replace(/[^a-zA-Z0-9_-]/g, "_");
+
+  STORAGE_PREFIX = `bingo_${safeId}_v2`;
+  BOARD_KEY = `${STORAGE_PREFIX}_board`;
+  CHECKED_KEY = `${STORAGE_PREFIX}_checked`;
+  LOCAL_OPTIONS_KEY = `${STORAGE_PREFIX}_local_options`;
+
   const options = normalizeOptions(data);
 
   if (options.length < 25) {
@@ -453,6 +483,7 @@ async function start() {
       board = savedBoard;
       checked = loadChecked();
     } else {
+      // No existe una partida para este id: crear una nueva.
       board = createBoard(options);
       checked = new Set();
     }
