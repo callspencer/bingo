@@ -118,6 +118,19 @@
   }
 
   /* Acceso oculto: no hay texto visible indicando cómo abrirlo. */
+  .debug-id {
+    position: fixed;
+    top: 10px;
+    right: 12px;
+    z-index: 5;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 11px;
+    color: var(--muted);
+    opacity: var(--debug-opacity, .35);
+    pointer-events: none;
+    user-select: none;
+  }
+
   .hidden-admin {
     position: fixed;
     left: -10000px;
@@ -259,6 +272,8 @@
     </div>
   </header>
 
+  <div id="debugId" class="debug-id" aria-label="ID del bingo"></div>
+
   <main id="bingo" class="bingo" aria-label="Tablero de bingo"></main>
 
   <!-- Campo invisible para acceso oculto. -->
@@ -300,15 +315,25 @@ const JSON_URL = "./bingo.json";
   }
 
   El "id" identifica la partida guardada.
-  Si cambias el id, la partida anterior deja de ser válida:
-  se crea otra distribución y empieza sin casillas marcadas.
+  Cada vez que se carga la página se compara el ID del JSON con el ID
+  guardado. Si no coinciden, el estado anterior no puede utilizarse:
+  se crea una distribución nueva y empieza sin casillas marcadas.
 */
-const STATE_KEY = "bingo_state_v3";
-const LOCAL_OPTIONS_KEY = "bingo_local_options_v3";
+const STATE_KEY = "bingo_state_v4";
+const LOCAL_OPTIONS_KEY = "bingo_local_options_v4";
+
+// Fácil de ajustar para depuración.
+// 0 = casi invisible, 1 = completamente visible.
+const DEBUG_ID_OPACITY = 0.35;
 
 let BINGO_ID = "";
 let board = [];
 let checked = new Set();
+
+document.documentElement.style.setProperty(
+  "--debug-opacity",
+  DEBUG_ID_OPACITY
+);
 
 let globalOptions = [];
 
@@ -408,6 +433,7 @@ function loadSavedState() {
     */
     if (
       saved &&
+      typeof saved.id === "string" &&
       saved.id === BINGO_ID &&
       Array.isArray(saved.board) &&
       saved.board.length === 25 &&
@@ -415,6 +441,10 @@ function loadSavedState() {
     ) {
       return saved;
     }
+
+    // Si existe un estado, pero su ID es distinto al del JSON actual,
+    // se ignora por completo. No se reutiliza ninguna parte del bingo viejo.
+    return null;
   } catch {}
 
   return null;
@@ -470,14 +500,21 @@ async function start() {
   try {
     const options = await loadOptions();
 
+    // Mostrar siempre el ID real que vino del bingo.json.
+    document.getElementById("debugId").textContent = `ID: ${BINGO_ID}`;
+
     const savedState = loadSavedState();
 
     if (savedState) {
+      // El ID coincide: conservar exactamente el mismo bingo y progreso.
       board = savedState.board;
       checked = new Set(savedState.checked);
     } else {
-      // El ID cambió o nunca hubo una partida para este ID.
-      // Esto crea automáticamente un bingo completamente nuevo.
+      /*
+        No existe un estado para este ID, o el estado guardado pertenece
+        a otro ID. En ambos casos se crea un bingo nuevo y se guarda
+        inmediatamente bajo el ID actual.
+      */
       createBoard(options);
     }
 
