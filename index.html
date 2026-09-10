@@ -137,17 +137,119 @@
     font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     font-size: 11px;
     color: var(--muted);
-    opacity: 0;
+    opacity: 0.6;
     cursor: pointer;
     user-select: none;
     transition: opacity 0.2s ease;
-    padding: 4px 8px;
+    padding: 6px 10px;
     border-radius: 4px;
-    background: rgba(0,0,0,0.3);
+    background: rgba(0,0,0,0.4);
   }
 
-  .debug-id.visible {
+  .debug-id:hover {
     opacity: 1;
+    background: rgba(0,0,0,0.6);
+  }
+
+  .debug-panel {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.75);
+    z-index: 15;
+    align-items: center;
+    justify-content: center;
+    padding: 18px;
+  }
+
+  .debug-panel.open {
+    display: flex;
+  }
+
+  .debug-box {
+    width: min(520px, 100%);
+    max-height: 85vh;
+    overflow: auto;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 15px 50px rgba(0,0,0,.35);
+  }
+
+  .debug-box h2 {
+    margin: 0 0 16px;
+    font-size: 1.2rem;
+    color: #52745d;
+  }
+
+  .debug-section {
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .debug-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+  }
+
+  .debug-section h3 {
+    margin: 0 0 8px;
+    font-size: 0.9rem;
+    color: #aab7ad;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .debug-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+    font-size: 0.85rem;
+    line-height: 1.4;
+  }
+
+  .debug-label {
+    color: var(--muted);
+    font-weight: 500;
+  }
+
+  .debug-value {
+    color: #52745d;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    word-break: break-all;
+    text-align: right;
+    margin-left: 12px;
+  }
+
+  .debug-buttons {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .debug-buttons button {
+    border: 0;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font: inherit;
+    cursor: pointer;
+    font-size: 0.85rem;
+  }
+
+  #closeDebug {
+    background: #292d32;
+    color: var(--text);
+    flex: 1;
+  }
+
+  #copyDebug {
+    background: #2a3f2e;
+    color: #aab7ad;
+    flex: 1;
   }
 
   .hidden-admin {
@@ -277,7 +379,7 @@
 </head>
 <body>
 
-<div id="debugId" class="debug-id" title="Haz clic para mostrar u ocultar el ID">ID: --</div>
+<div id="debugId" class="debug-id" title="Haz clic para mostrar información de debug">⚙️</div>
 
 <div class="page">
   <header>
@@ -309,6 +411,77 @@
   >
 </div>
 
+<div id="debugPanel" class="debug-panel">
+  <div class="debug-box">
+    <h2>📊 Información de Debug</h2>
+
+    <div class="debug-section">
+      <h3>Identificación</h3>
+      <div class="debug-item">
+        <span class="debug-label">Bingo ID:</span>
+        <span class="debug-value" id="debugIdValue">--</span>
+      </div>
+      <div class="debug-item">
+        <span class="debug-label">Versión:</span>
+        <span class="debug-value" id="debugVersion">v1.0.0</span>
+      </div>
+    </div>
+
+    <div class="debug-section">
+      <h3>Estado del Tablero</h3>
+      <div class="debug-item">
+        <span class="debug-label">Casillas marcadas:</span>
+        <span class="debug-value" id="debugChecked">0 / 25</span>
+      </div>
+      <div class="debug-item">
+        <span class="debug-label">Puntos totales:</span>
+        <span class="debug-value" id="debugScore">0</span>
+      </div>
+      <div class="debug-item">
+        <span class="debug-label">Tablero guardado:</span>
+        <span class="debug-value" id="debugSaved">Sí</span>
+      </div>
+    </div>
+
+    <div class="debug-section">
+      <h3>Almacenamiento Local</h3>
+      <div class="debug-item">
+        <span class="debug-label">LocalStorage disponible:</span>
+        <span class="debug-value" id="debugLocalStorage">Sí</span>
+      </div>
+      <div class="debug-item">
+        <span class="debug-label">Espacio usado:</span>
+        <span class="debug-value" id="debugStorageSize">--</span>
+      </div>
+      <div class="debug-item">
+        <span class="debug-label">Opciones locales:</span>
+        <span class="debug-value" id="debugLocalOptions">0</span>
+      </div>
+    </div>
+
+    <div class="debug-section">
+      <h3>Navegador</h3>
+      <div class="debug-item">
+        <span class="debug-label">User Agent:</span>
+        <span class="debug-value" id="debugUserAgent">--</span>
+      </div>
+      <div class="debug-item">
+        <span class="debug-label">Resolución:</span>
+        <span class="debug-value" id="debugResolution">--</span>
+      </div>
+      <div class="debug-item">
+        <span class="debug-label">Crypto disponible:</span>
+        <span class="debug-value" id="debugCrypto">Sí</span>
+      </div>
+    </div>
+
+    <div class="debug-buttons">
+      <button id="copyDebug">📋 Copiar Info</button>
+      <button id="closeDebug">Cerrar</button>
+    </div>
+  </div>
+</div>
+
 <div id="adminPanel" class="admin-panel">
   <div class="admin-box">
     <h2>Opciones</h2>
@@ -327,26 +500,126 @@
 const JSON_URL = "./bingo.json";
 const STATE_KEY = "bingo_state_v4";
 const LOCAL_OPTIONS_KEY = "bingo_local_options_v4";
+const VERSION = "v1.2.0";
 
 let BINGO_ID = "";
 let board = [];
 let checked = new Set();
 let globalOptions = [];
 
-// Mostrar/Ocultar ID al hacer clic
+// Mostrar/Ocultar panel de debug al hacer clic
 const debugElement = document.getElementById("debugId");
 debugElement.addEventListener("click", () => {
-  debugElement.classList.toggle("visible");
+  document.getElementById("debugPanel").classList.add("open");
+  updateDebugInfo();
 });
 
+// Cerrar panel de debug
+document.getElementById("closeDebug").addEventListener("click", () => {
+  document.getElementById("debugPanel").classList.remove("open");
+});
+
+document.getElementById("debugPanel").addEventListener("click", event => {
+  if (event.target.id === "debugPanel") {
+    document.getElementById("debugPanel").classList.remove("open");
+  }
+});
+
+// Copiar información de debug
+document.getElementById("copyDebug").addEventListener("click", () => {
+  const debugText = generateDebugText();
+  navigator.clipboard.writeText(debugText).then(() => {
+    const btn = document.getElementById("copyDebug");
+    const originalText = btn.textContent;
+    btn.textContent = "✓ Copiado!";
+    setTimeout(() => {
+      btn.textContent = originalText;
+    }, 2000);
+  });
+});
+
+function generateDebugText() {
+  return `=== INFORMACIÓN DE DEBUG BINGO ===
+Versión: ${VERSION}
+Bingo ID: ${BINGO_ID}
+Timestamp: ${new Date().toISOString()}
+
+--- ESTADO DEL TABLERO ---
+Casillas marcadas: ${checked.size} / 25
+Puntos totales: ${calculateScore()}
+Tablero guardado: ${loadSavedState() ? 'Sí' : 'No'}
+
+--- ALMACENAMIENTO ---
+LocalStorage disponible: ${isLocalStorageAvailable() ? 'Sí' : 'No'}
+Opciones cargadas: ${globalOptions.length}
+Opciones locales: ${getLocalOptions().length}
+
+--- NAVEGADOR ---
+User Agent: ${navigator.userAgent}
+Resolución: ${window.innerWidth} x ${window.innerHeight}
+Crypto disponible: ${!!window.crypto?.getRandomValues ? 'Sí' : 'No'}
+
+--- DATOS GUARDADOS ---
+${JSON.stringify({
+  bingo_id: BINGO_ID,
+  board: board,
+  checked: Array.from(checked)
+}, null, 2)}
+`;
+}
+
+function updateDebugInfo() {
+  document.getElementById("debugIdValue").textContent = BINGO_ID || "--";
+  document.getElementById("debugVersion").textContent = VERSION;
+  document.getElementById("debugChecked").textContent = `${checked.size} / 25`;
+  document.getElementById("debugScore").textContent = calculateScore();
+  document.getElementById("debugSaved").textContent = loadSavedState() ? "Sí" : "No";
+  document.getElementById("debugLocalStorage").textContent = isLocalStorageAvailable() ? "Sí" : "No";
+  
+  const storageSize = getApproximateStorageSize();
+  document.getElementById("debugStorageSize").textContent = storageSize;
+  
+  document.getElementById("debugLocalOptions").textContent = getLocalOptions().length;
+  
+  const browser = navigator.userAgent.split(" ").slice(-2).join(" ");
+  document.getElementById("debugUserAgent").textContent = browser;
+  document.getElementById("debugResolution").textContent = `${window.innerWidth}x${window.innerHeight}`;
+  document.getElementById("debugCrypto").textContent = window.crypto?.getRandomValues ? "Sí" : "No";
+}
+
+function isLocalStorageAvailable() {
+  try {
+    const test = "__test__";
+    localStorage.setItem(test, test);
+    localStorage.removeItem(test);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function getApproximateStorageSize() {
+  try {
+    const total = JSON.stringify(localStorage).length;
+    return total + " bytes";
+  } catch {
+    return "--";
+  }
+}
+
+function getLocalOptions() {
+  try {
+    const local = localStorage.getItem(LOCAL_OPTIONS_KEY);
+    return local ? JSON.parse(local) : [];
+  } catch {
+    return [];
+  }
+}
+
 // --- Aleatoriedad robusta por navegador/usuario ---
-// Usamos crypto.getRandomValues en vez de Math.random para tener
-// una fuente de aleatoriedad de mejor calidad y evitar cualquier
-// sesgo o coincidencia entre tableros de distintos usuarios.
 function secureRandomInt(maxExclusive) {
   if (window.crypto && window.crypto.getRandomValues) {
     const array = new Uint32Array(1);
-    // Evita sesgo de módulo rechazando valores fuera del rango uniforme
     const limit = Math.floor(0xFFFFFFFF / maxExclusive) * maxExclusive;
     let value;
     do {
@@ -355,7 +628,6 @@ function secureRandomInt(maxExclusive) {
     } while (value >= limit);
     return value % maxExclusive;
   }
-  // Respaldo por si el navegador no soporta crypto.getRandomValues
   return Math.floor(Math.random() * maxExclusive);
 }
 
@@ -418,9 +690,6 @@ function saveState() {
 }
 
 function createBoard(options) {
-  // Cada llamada genera un orden distinto e independiente,
-  // sin relación con el "id" del set de preguntas ni con
-  // el tablero de ningún otro usuario.
   const newBoard = shuffle(options).slice(0, 25);
   board = newBoard;
   checked = new Set();
@@ -479,19 +748,19 @@ function calculateScore() {
     if (fullCol) score += 5;
   }
 
-  // 4. 4 esquinas (10 pts) -> índices 0, 4, 20, 24
+  // 4. 4 esquinas (10 pts)
   if (isChecked(0) && isChecked(4) && isChecked(20) && isChecked(24)) {
     score += 10;
   }
 
-  // 5. Cruz (15 pts) -> Fila del centro (índices 10 a 14) + Columna del centro (2, 7, 12, 17, 22)
+  // 5. Cruz (15 pts)
   const centerRow = [10, 11, 12, 13, 14].every(isChecked);
   const centerCol = [2, 7, 12, 17, 22].every(isChecked);
   if (centerRow && centerCol) {
     score += 15;
   }
 
-  // 6. Cuadrado / Marco exterior (20 pts) -> Filas 1 y 5 + Columnas 1 y 5
+  // 6. Marco exterior (20 pts)
   const outerIndices = [
     0,1,2,3,4,
     5,9,
@@ -510,7 +779,7 @@ function calculateScore() {
     score += 25;
   }
 
-  // 8. Cartón completo / Bingo (50 pts)
+  // 8. Bingo completo (50 pts)
   if (checked.size === 25) {
     score += 50;
   }
@@ -566,8 +835,6 @@ function showError(message) {
 async function start() {
   try {
     const options = await loadOptions();
-
-    document.getElementById("debugId").textContent = `ID: ${BINGO_ID}`;
 
     const savedState = loadSavedState();
 
