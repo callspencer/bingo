@@ -1,1124 +1,625 @@
- <!DOCTYPE html>
-
+<!DOCTYPE html>
 <html lang="es">
-
 <head>
-
 <meta charset="UTF-8">
-
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>Bingo</title>
-
 <style>
-
   :root {
-
     --bg: #111315;
-
     --card: #191c20;
-
     --text: #f0f1f2;
-
     --muted: #9298a1;
-
     --line: #30353b;
-
     --accent: #f0f1f2;
-
     --accent-text: #111315;
-
     --checked: #26352b;
-
     --checked-border: #52745d;
-
   }
-
 
   * { box-sizing: border-box; }
 
-
   body {
-
     margin: 0;
-
     min-height: 100vh;
-
     background: var(--bg);
-
     color: var(--text);
-
     font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-
   }
-
 
   .page {
-
     width: min(900px, calc(100% - 28px));
-
     margin: 0 auto;
-
     padding: 34px 0 50px;
-
   }
-
 
   header {
-
     text-align: center;
-
     margin-bottom: 24px;
-
   }
-
 
   h1 {
-
     margin: 0;
-
     font-size: clamp(2rem, 6vw, 3.2rem);
-
     letter-spacing: -0.04em;
-
   }
-
 
   .subtitle {
-
     margin: 7px 0 0;
-
     color: var(--muted);
-
     font-size: 0.95rem;
-
   }
-
-
-  .debug-id {
-
-    background: var(--accent);
-
-    color: var(--accent-text);
-
-    padding: 12px 16px;
-
-    border-radius: 8px;
-
-    margin: 16px auto 0;
-
-    width: fit-content;
-
-    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-
-    font-size: 0.95rem;
-
-    font-weight: 600;
-
-    letter-spacing: 0.02em;
-
-  }
-
 
   .progress {
-
     width: min(520px, 100%);
-
     margin: 18px auto 0;
-
   }
-
 
   .progress-text {
-
     display: flex;
-
     justify-content: space-between;
-
     font-size: 0.82rem;
-
     color: var(--muted);
-
     margin-bottom: 7px;
-
   }
-
 
   .bar {
-
     height: 7px;
-
     background: #2a2e33;
-
     border-radius: 99px;
-
     overflow: hidden;
-
   }
-
 
   .bar > div {
-
     height: 100%;
-
     width: 0%;
-
     background: var(--accent);
-
     transition: width .2s ease;
-
   }
-
 
   .bingo {
-
     display: grid;
-
     grid-template-columns: repeat(5, 1fr);
-
     gap: 9px;
-
   }
-
 
   .cell {
-
     min-height: 145px;
-
     border: 1px solid var(--line);
-
     border-radius: 10px;
-
     background: var(--card);
-
     color: var(--text);
-
     padding: 14px 11px;
-
     cursor: pointer;
-
     display: flex;
-
     align-items: center;
-
     justify-content: center;
-
     text-align: center;
-
     font: inherit;
-
     font-size: clamp(.78rem, 1.65vw, .98rem);
-
     line-height: 1.3;
-
     user-select: none;
-
     transition: background .12s ease, border-color .12s ease;
-
   }
-
 
   .cell:hover {
-
     border-color: #50565e;
-
   }
-
 
   .cell:active {
-
     transform: scale(.985);
-
   }
-
 
   .cell.checked {
-
     background: var(--checked);
-
     border-color: var(--checked-border);
-
     text-decoration: line-through;
-
     color: #aab7ad;
-
   }
 
+  /* Acceso oculto: no hay texto visible indicando cómo abrirlo. */
+  .debug-id {
+    position: fixed;
+    top: 10px;
+    right: 12px;
+    z-index: 5;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 11px;
+    color: var(--muted);
+    opacity: var(--debug-opacity, .35);
+    pointer-events: none;
+    user-select: none;
+  }
 
   .hidden-admin {
-
     position: fixed;
-
     left: -10000px;
-
     top: -10000px;
-
     width: 1px;
-
     height: 1px;
-
     opacity: 0;
-
   }
-
 
   .admin-panel {
-
     display: none;
-
     position: fixed;
-
     inset: 0;
-
     background: rgba(0,0,0,.72);
-
     z-index: 10;
-
     align-items: center;
-
     justify-content: center;
-
     padding: 18px;
-
   }
-
 
   .admin-panel.open {
-
     display: flex;
-
   }
-
 
   .admin-box {
-
     width: min(560px, 100%);
-
     max-height: 90vh;
-
     overflow: auto;
-
     background: var(--card);
-
     border: 1px solid var(--line);
-
     border-radius: 12px;
-
     padding: 20px;
-
     box-shadow: 0 15px 50px rgba(0,0,0,.35);
-
   }
-
 
   .admin-box h2 {
-
     margin: 0 0 14px;
-
     font-size: 1.15rem;
-
   }
-
 
   .admin-box textarea {
-
     width: 100%;
-
     min-height: 130px;
-
     resize: vertical;
-
     border: 1px solid var(--line);
-
     border-radius: 8px;
-
     padding: 11px;
-
     font: inherit;
-
     color: var(--text);
-
     background: #111315;
-
     outline: none;
-
   }
-
 
   .admin-box textarea:focus {
-
     border-color: #646b74;
-
   }
-
 
   .admin-buttons {
-
     display: flex;
-
     gap: 8px;
-
     margin-top: 10px;
-
   }
-
 
   .admin-buttons button {
-
     border: 0;
-
     border-radius: 7px;
-
     padding: 10px 14px;
-
     font: inherit;
-
     cursor: pointer;
-
   }
-
 
   #saveOptions {
-
     background: var(--accent);
-
     color: var(--accent-text);
-
   }
-
 
   #closeAdmin {
-
     background: #292d32;
-
     color: var(--text);
-
   }
-
 
   .admin-status {
-
     margin-top: 9px;
-
     color: var(--muted);
-
     font-size: .78rem;
-
     line-height: 1.4;
-
   }
-
 
   .error {
-
     width: min(600px, 100%);
-
     margin: 30px auto;
-
     padding: 18px;
-
     border: 1px solid #583d3d;
-
     border-radius: 10px;
-
     background: #211819;
-
     color: #e1baba;
-
     text-align: center;
-
   }
-
 
   @media (max-width: 650px) {
-
     .page {
-
       width: min(100% - 12px, 560px);
-
       padding-top: 22px;
-
     }
-
 
     .bingo {
-
       gap: 5px;
-
     }
-
 
     .cell {
-
       min-height: 105px;
-
       padding: 8px 5px;
-
       border-radius: 7px;
-
       font-size: .72rem;
-
     }
-
   }
-
 
   @media (max-width: 390px) {
-
     .cell {
-
       min-height: 92px;
-
       font-size: .66rem;
-
     }
-
   }
-
 </style>
-
 </head>
-
 <body>
 
-
 <div class="page">
-
   <header>
-
     <h1>BINGO</h1>
-
     <p class="subtitle">Marca una casilla cuando ocurra.</p>
 
-
-    <div id="debugId" class="debug-id" aria-label="ID del bingo"></div>
-
-
     <div class="progress">
-
       <div class="progress-text">
-
         <span>Progreso</span>
-
         <span id="progressText">0 / 25</span>
-
       </div>
-
       <div class="bar"><div id="progressBar"></div></div>
-
     </div>
-
   </header>
 
+  <div id="debugId" class="debug-id" aria-label="ID del bingo"></div>
 
   <main id="bingo" class="bingo" aria-label="Tablero de bingo"></main>
 
-
   <!-- Campo invisible para acceso oculto. -->
-
   <input
-
     id="adminTrigger"
-
     class="hidden-admin"
-
     type="text"
-
     autocomplete="off"
-
     aria-hidden="true"
-
     tabindex="-1"
-
   >
-
 </div>
-
 
 <div id="adminPanel" class="admin-panel">
-
   <div class="admin-box">
-
     <h2>Opciones</h2>
-
     <textarea id="optionsEditor" spellcheck="false"></textarea>
 
-
     <div class="admin-buttons">
-
       <button id="saveOptions">Guardar</button>
-
       <button id="closeAdmin">Cerrar</button>
-
     </div>
 
-
     <div id="adminStatus" class="admin-status"></div>
-
   </div>
-
 </div>
 
-
 <script>
-
 const JSON_URL = "./bingo.json";
 
-
 /*
-
   bingo.json debe tener:
-
   {
-
     "id": "EL_STRING_QUE_TU_DECIDAS",
-
     "options": [
-
       "Opción 1",
-
       "Opción 2"
-
     ]
-
   }
 
-
   El "id" identifica la partida guardada.
-
   Cada vez que se carga la página se compara el ID del JSON con el ID
-
   guardado. Si no coinciden, el estado anterior no puede utilizarse:
-
   se crea una distribución nueva y empieza sin casillas marcadas.
-
 */
-
 const STATE_KEY = "bingo_state_v4";
-
 const LOCAL_OPTIONS_KEY = "bingo_local_options_v4";
 
+// Fácil de ajustar para depuración.
+// 0 = casi invisible, 1 = completamente visible.
+const DEBUG_ID_OPACITY = 0.35;
 
 let BINGO_ID = "";
-
 let board = [];
-
 let checked = new Set();
 
+document.documentElement.style.setProperty(
+  "--debug-opacity",
+  DEBUG_ID_OPACITY
+);
 
 let globalOptions = [];
 
-
 function shuffle(array) {
-
   const result = [...array];
 
-
   for (let i = result.length - 1; i > 0; i--) {
-
     const j = Math.floor(Math.random() * (i + 1));
-
     [result[i], result[j]] = [result[j], result[i]];
-
   }
-
 
   return result;
-
 }
-
 
 function normalizeOptions(data) {
-
   /*
-
     Acepta cualquiera de estos formatos:
 
-
     Formato esperado:
-
     {
-
       "id": "mi-bingo-2026",
-
       "options": ["Opción 1", "Opción 2", ...]
-
     }
-
   */
 
-
   const options = Array.isArray(data)
-
     ? data
-
     : Array.isArray(data?.options)
-
       ? data.options
-
       : [];
 
-
   return [...new Set(
-
     options
-
       .filter(item => typeof item === "string")
-
       .map(item => item.trim())
-
       .filter(Boolean)
-
   )];
-
 }
 
-
 async function loadOptions() {
-
   const response = await fetch(`${JSON_URL}?v=${Date.now()}`, {
-
     cache: "no-store"
-
   });
 
-
   if (!response.ok) {
-
     throw new Error("No se pudo cargar bingo.json");
-
   }
-
 
   const data = await response.json();
 
-
   if (!data || typeof data.id !== "string" || !data.id.trim()) {
-
     throw new Error('bingo.json necesita un "id" único.');
-
   }
-
 
   const id = data.id.trim();
 
-
   BINGO_ID = id;
-
 
   const options = normalizeOptions(data);
 
-
   if (options.length < 25) {
-
     throw new Error("bingo.json necesita al menos 25 opciones.");
-
   }
 
-
   globalOptions = options;
-
   return options;
-
 }
-
 
 function saveState() {
-
   localStorage.setItem(STATE_KEY, JSON.stringify({
-
     id: BINGO_ID,
-
     board: board,
-
     checked: [...checked]
-
   }));
-
 }
-
 
 function createBoard(options) {
-
   // Se seleccionan exactamente 25 opciones.
-
   // El ID del JSON queda guardado junto con el tablero.
-
   const newBoard = shuffle(options).slice(0, 25);
 
-
   board = newBoard;
-
   checked = new Set();
 
-
   saveState();
-
   return newBoard;
-
 }
-
 
 function loadSavedState() {
-
   try {
-
     const saved = JSON.parse(localStorage.getItem(STATE_KEY) || "null");
 
-
     /*
-
       MUY IMPORTANTE:
-
       El tablero solo es válido si pertenece al mismo ID
-
       que actualmente tiene bingo.json.
-
     */
-
     if (
-
       saved &&
-
       typeof saved.id === "string" &&
-
       saved.id === BINGO_ID &&
-
       Array.isArray(saved.board) &&
-
       saved.board.length === 25 &&
-
       Array.isArray(saved.checked)
-
     ) {
-
       return saved;
-
     }
 
-
     // Si existe un estado, pero su ID es distinto al del JSON actual,
-
     // se ignora por completo. No se reutiliza ninguna parte del bingo viejo.
-
     return null;
-
   } catch {}
 
-
   return null;
-
 }
 
-
 function render() {
-
   const container = document.getElementById("bingo");
-
   container.innerHTML = "";
 
-
   board.forEach((item, index) => {
-
     const cell = document.createElement("button");
 
-
     cell.type = "button";
-
     cell.className = "cell" + (checked.has(index) ? " checked" : "");
-
     cell.textContent = item;
-
     cell.setAttribute(
-
       "aria-pressed",
-
       checked.has(index) ? "true" : "false"
-
     );
 
-
     cell.addEventListener("click", () => {
-
       if (checked.has(index)) {
-
         checked.delete(index);
-
       } else {
-
         checked.add(index);
-
       }
 
-
       saveChecked();
-
       render();
-
     });
 
-
     container.appendChild(cell);
-
   });
-
 
   const amount = checked.size;
 
-
   document.getElementById("progressText").textContent =
-
     `${amount} / 25`;
 
-
   document.getElementById("progressBar").style.width =
-
     `${amount * 4}%`;
-
 }
-
 
 function showError(message) {
-
   document.getElementById("bingo").innerHTML = `
-
     <div class="error">
-
       ${message}
-
     </div>
-
   `;
-
 }
 
-
 async function start() {
-
   try {
-
     const options = await loadOptions();
 
-
-    // Mostrar el ID de forma visible y destacada
-
+    // Mostrar siempre el ID real que vino del bingo.json.
     document.getElementById("debugId").textContent = `ID: ${BINGO_ID}`;
-
 
     const savedState = loadSavedState();
 
-
     if (savedState) {
-
       // El ID coincide: conservar exactamente el mismo bingo y progreso.
-
       board = savedState.board;
-
       checked = new Set(savedState.checked);
-
     } else {
-
       /*
-
         No existe un estado para este ID, o el estado guardado pertenece
-
         a otro ID. En ambos casos se crea un bingo nuevo y se guarda
-
         inmediatamente bajo el ID actual.
-
       */
-
       createBoard(options);
-
     }
-
 
     render();
-
   } catch (error) {
-
     console.error(error);
-
     showError(
-
       "No se pudo cargar el bingo. Comprueba que <strong>bingo.json</strong> esté junto a este HTML."
-
     );
-
   }
-
 }
-
 
 /*
-
   ADMIN OCULTO
 
-
   Para abrirlo:
-
   - pulsa cualquier tecla/campo que permita escribir;
-
   - escribe "admin panel";
-
   - pulsa Enter.
 
-
   No hay ningún texto visible que indique esta función.
-
 */
-
 let adminBuffer = "";
 
-
 document.addEventListener("keydown", event => {
-
   if (
-
     event.key === "F5" ||
-
     event.ctrlKey ||
-
     event.metaKey ||
-
     event.altKey
-
   ) {
-
     return;
-
   }
-
 
   if (event.key === "Enter") {
-
     if (adminBuffer.trim().toLowerCase() === "admin panel") {
-
       openAdmin();
-
     }
-
 
     adminBuffer = "";
-
     return;
-
   }
-
 
   if (event.key.length === 1) {
-
     adminBuffer += event.key;
 
-
     if (adminBuffer.length > 40) {
-
       adminBuffer = adminBuffer.slice(-40);
-
     }
-
   }
-
 });
 
-
 function openAdmin() {
-
   document.getElementById("adminPanel").classList.add("open");
 
-
   document.getElementById("optionsEditor").value =
-
     globalOptions.join("\n");
 
-
   document.getElementById("adminStatus").textContent =
-
     `${globalOptions.length} opciones cargadas desde bingo.json.`;
-
 }
-
 
 function closeAdmin() {
-
   document.getElementById("adminPanel").classList.remove("open");
-
 }
-
 
 document.getElementById("closeAdmin").addEventListener("click", closeAdmin);
 
-
 document.getElementById("adminPanel").addEventListener("click", event => {
-
   if (event.target.id === "adminPanel") {
-
     closeAdmin();
-
   }
-
 });
-
 
 /*
-
   El botón de guardar NO puede modificar GitHub directamente desde
-
   un HTML estático. Guarda una copia local para poder preparar/revisar
-
   opciones, pero la fuente global sigue siendo bingo.json.
-
 */
-
 document.getElementById("saveOptions").addEventListener("click", () => {
-
   const text = document.getElementById("optionsEditor").value;
 
-
   const options = [...new Set(
-
     text
-
       .split("\n")
-
       .map(item => item.trim())
-
       .filter(Boolean)
-
   )];
 
-
   if (options.length < 25) {
-
     document.getElementById("adminStatus").textContent =
-
       "Necesitas al menos 25 opciones.";
-
     return;
-
   }
 
-
   localStorage.setItem(
-
     LOCAL_OPTIONS_KEY,
-
     JSON.stringify(options)
-
   );
 
-
   document.getElementById("adminStatus").textContent =
-
     "Guardado localmente. Para hacerlo global, actualiza bingo.json en GitHub.";
-
 });
 
-
 start();
-
 </script>
-
 </body>
-
-</html> 
+</html>
