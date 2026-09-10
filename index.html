@@ -110,6 +110,7 @@
     transform: scale(.985);
   }
 
+  /* Estilos cuando la casilla está marcada/tachada */
   .cell.checked {
     background: var(--checked);
     border-color: var(--checked-border);
@@ -117,7 +118,6 @@
     color: #aab7ad;
   }
 
-  /* Acceso oculto: no hay texto visible indicando cómo abrirlo. */
   .debug-id {
     position: fixed;
     top: 10px;
@@ -276,7 +276,6 @@
 
   <main id="bingo" class="bingo" aria-label="Tablero de bingo"></main>
 
-  <!-- Campo invisible para acceso oculto. -->
   <input
     id="adminTrigger"
     class="hidden-admin"
@@ -303,27 +302,9 @@
 
 <script>
 const JSON_URL = "./bingo.json";
-
-/*
-  bingo.json debe tener:
-  {
-    "id": "EL_STRING_QUE_TU_DECIDAS",
-    "options": [
-      "Opción 1",
-      "Opción 2"
-    ]
-  }
-
-  El "id" identifica la partida guardada.
-  Cada vez que se carga la página se compara el ID del JSON con el ID
-  guardado. Si no coinciden, el estado anterior no puede utilizarse:
-  se crea una distribución nueva y empieza sin casillas marcadas.
-*/
 const STATE_KEY = "bingo_state_v4";
 const LOCAL_OPTIONS_KEY = "bingo_local_options_v4";
 
-// Fácil de ajustar para depuración.
-// 0 = casi invisible, 1 = completamente visible.
 const DEBUG_ID_OPACITY = 0.35;
 
 let BINGO_ID = "";
@@ -349,16 +330,6 @@ function shuffle(array) {
 }
 
 function normalizeOptions(data) {
-  /*
-    Acepta cualquiera de estos formatos:
-
-    Formato esperado:
-    {
-      "id": "mi-bingo-2026",
-      "options": ["Opción 1", "Opción 2", ...]
-    }
-  */
-
   const options = Array.isArray(data)
     ? data
     : Array.isArray(data?.options)
@@ -389,7 +360,6 @@ async function loadOptions() {
   }
 
   const id = data.id.trim();
-
   BINGO_ID = id;
 
   const options = normalizeOptions(data);
@@ -402,6 +372,7 @@ async function loadOptions() {
   return options;
 }
 
+// Guarda en localStorage el tablero actual y las casillas marcadas
 function saveState() {
   localStorage.setItem(STATE_KEY, JSON.stringify({
     id: BINGO_ID,
@@ -411,8 +382,6 @@ function saveState() {
 }
 
 function createBoard(options) {
-  // Se seleccionan exactamente 25 opciones.
-  // El ID del JSON queda guardado junto con el tablero.
   const newBoard = shuffle(options).slice(0, 25);
 
   board = newBoard;
@@ -426,11 +395,6 @@ function loadSavedState() {
   try {
     const saved = JSON.parse(localStorage.getItem(STATE_KEY) || "null");
 
-    /*
-      MUY IMPORTANTE:
-      El tablero solo es válido si pertenece al mismo ID
-      que actualmente tiene bingo.json.
-    */
     if (
       saved &&
       typeof saved.id === "string" &&
@@ -442,8 +406,6 @@ function loadSavedState() {
       return saved;
     }
 
-    // Si existe un estado, pero su ID es distinto al del JSON actual,
-    // se ignora por completo. No se reutiliza ninguna parte del bingo viejo.
     return null;
   } catch {}
 
@@ -465,6 +427,7 @@ function render() {
       checked.has(index) ? "true" : "false"
     );
 
+    // Evento al hacer clic en cada casilla
     cell.addEventListener("click", () => {
       if (checked.has(index)) {
         checked.delete(index);
@@ -472,13 +435,16 @@ function render() {
         checked.add(index);
       }
 
-      saveChecked();
+      // Guardar el estado actualizado en el navegador
+      saveState();
+      // Volver a renderizar para actualizar clases visuales y la barra
       render();
     });
 
     container.appendChild(cell);
   });
 
+  // Actualización del texto e indicador de progreso
   const amount = checked.size;
 
   document.getElementById("progressText").textContent =
@@ -500,21 +466,14 @@ async function start() {
   try {
     const options = await loadOptions();
 
-    // Mostrar siempre el ID real que vino del bingo.json.
     document.getElementById("debugId").textContent = `ID: ${BINGO_ID}`;
 
     const savedState = loadSavedState();
 
     if (savedState) {
-      // El ID coincide: conservar exactamente el mismo bingo y progreso.
       board = savedState.board;
       checked = new Set(savedState.checked);
     } else {
-      /*
-        No existe un estado para este ID, o el estado guardado pertenece
-        a otro ID. En ambos casos se crea un bingo nuevo y se guarda
-        inmediatamente bajo el ID actual.
-      */
       createBoard(options);
     }
 
@@ -527,16 +486,7 @@ async function start() {
   }
 }
 
-/*
-  ADMIN OCULTO
-
-  Para abrirlo:
-  - pulsa cualquier tecla/campo que permita escribir;
-  - escribe "admin panel";
-  - pulsa Enter.
-
-  No hay ningún texto visible que indique esta función.
-*/
+// Panel de administración oculto
 let adminBuffer = "";
 
 document.addEventListener("keydown", event => {
@@ -589,11 +539,6 @@ document.getElementById("adminPanel").addEventListener("click", event => {
   }
 });
 
-/*
-  El botón de guardar NO puede modificar GitHub directamente desde
-  un HTML estático. Guarda una copia local para poder preparar/revisar
-  opciones, pero la fuente global sigue siendo bingo.json.
-*/
 document.getElementById("saveOptions").addEventListener("click", () => {
   const text = document.getElementById("optionsEditor").value;
 
