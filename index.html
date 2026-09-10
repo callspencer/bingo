@@ -53,14 +53,14 @@
   .debug-id {
     background: var(--accent);
     color: var(--accent-text);
-    padding: 12px 16px;
+    padding: 10px 16px;
     border-radius: 8px;
-    margin: 16px auto 0;
+    margin: 0 auto 14px;
     width: fit-content;
     font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    font-size: 0.95rem;
-    font-weight: 600;
-    letter-spacing: 0.02em;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
   }
 
   .progress {
@@ -262,9 +262,8 @@
     <h1>BINGO</h1>
     <p class="subtitle">Marca una casilla cuando ocurra.</p>
 
-    <div id="debugId" class="debug-id" aria-label="ID del bingo"></div>
-
     <div class="progress">
+      <div id="debugId" class="debug-id" aria-label="ID del bingo"></div>
       <div class="progress-text">
         <span>Progreso</span>
         <span id="progressText">0 / 25</span>
@@ -303,21 +302,6 @@
 <script>
 const JSON_URL = "./bingo.json";
 
-/*
-  bingo.json debe tener:
-  {
-    "id": "EL_STRING_QUE_TU_DECIDAS",
-    "options": [
-      "Opción 1",
-      "Opción 2"
-    ]
-  }
-
-  El "id" identifica la partida guardada.
-  Cada vez que se carga la página se compara el ID del JSON con el ID
-  guardado. Si no coinciden, el estado anterior no puede utilizarse:
-  se crea una distribución nueva y empieza sin casillas marcadas.
-*/
 const STATE_KEY = "bingo_state_v4";
 const LOCAL_OPTIONS_KEY = "bingo_local_options_v4";
 
@@ -339,16 +323,6 @@ function shuffle(array) {
 }
 
 function normalizeOptions(data) {
-  /*
-    Acepta cualquiera de estos formatos:
-
-    Formato esperado:
-    {
-      "id": "mi-bingo-2026",
-      "options": ["Opción 1", "Opción 2", ...]
-    }
-  */
-
   const options = Array.isArray(data)
     ? data
     : Array.isArray(data?.options)
@@ -400,9 +374,11 @@ function saveState() {
   }));
 }
 
+function saveChecked() {
+  saveState();
+}
+
 function createBoard(options) {
-  // Se seleccionan exactamente 25 opciones.
-  // El ID del JSON queda guardado junto con el tablero.
   const newBoard = shuffle(options).slice(0, 25);
 
   board = newBoard;
@@ -416,11 +392,6 @@ function loadSavedState() {
   try {
     const saved = JSON.parse(localStorage.getItem(STATE_KEY) || "null");
 
-    /*
-      MUY IMPORTANTE:
-      El tablero solo es válido si pertenece al mismo ID
-      que actualmente tiene bingo.json.
-    */
     if (
       saved &&
       typeof saved.id === "string" &&
@@ -432,8 +403,6 @@ function loadSavedState() {
       return saved;
     }
 
-    // Si existe un estado, pero su ID es distinto al del JSON actual,
-    // se ignora por completo. No se reutiliza ninguna parte del bingo viejo.
     return null;
   } catch {}
 
@@ -490,21 +459,14 @@ async function start() {
   try {
     const options = await loadOptions();
 
-    // Mostrar el ID de forma visible y destacada
     document.getElementById("debugId").textContent = `ID: ${BINGO_ID}`;
 
     const savedState = loadSavedState();
 
     if (savedState) {
-      // El ID coincide: conservar exactamente el mismo bingo y progreso.
       board = savedState.board;
       checked = new Set(savedState.checked);
     } else {
-      /*
-        No existe un estado para este ID, o el estado guardado pertenece
-        a otro ID. En ambos casos se crea un bingo nuevo y se guarda
-        inmediatamente bajo el ID actual.
-      */
       createBoard(options);
     }
 
@@ -517,16 +479,6 @@ async function start() {
   }
 }
 
-/*
-  ADMIN OCULTO
-
-  Para abrirlo:
-  - pulsa cualquier tecla/campo que permita escribir;
-  - escribe "admin panel";
-  - pulsa Enter.
-
-  No hay ningún texto visible que indique esta función.
-*/
 let adminBuffer = "";
 
 document.addEventListener("keydown", event => {
@@ -579,11 +531,6 @@ document.getElementById("adminPanel").addEventListener("click", event => {
   }
 });
 
-/*
-  El botón de guardar NO puede modificar GitHub directamente desde
-  un HTML estático. Guarda una copia local para poder preparar/revisar
-  opciones, pero la fuente global sigue siendo bingo.json.
-*/
 document.getElementById("saveOptions").addEventListener("click", () => {
   const text = document.getElementById("optionsEditor").value;
 
