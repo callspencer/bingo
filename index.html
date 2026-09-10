@@ -50,6 +50,19 @@
     font-size: 0.95rem;
   }
 
+  .debug-id {
+    background: var(--accent);
+    color: var(--accent-text);
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin: 16px auto 0;
+    width: fit-content;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.95rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+
   .progress {
     width: min(520px, 100%);
     margin: 18px auto 0;
@@ -115,20 +128,6 @@
     border-color: var(--checked-border);
     text-decoration: line-through;
     color: #aab7ad;
-  }
-
-  /* Acceso oculto: no hay texto visible indicando cómo abrirlo. */
-  .debug-id {
-    position: fixed;
-    top: 10px;
-    right: 12px;
-    z-index: 5;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    font-size: 11px;
-    color: var(--muted);
-    opacity: var(--debug-opacity, .35);
-    pointer-events: none;
-    user-select: none;
   }
 
   .hidden-admin {
@@ -263,6 +262,8 @@
     <h1>BINGO</h1>
     <p class="subtitle">Marca una casilla cuando ocurra.</p>
 
+    <div id="debugId" class="debug-id" aria-label="ID del bingo"></div>
+
     <div class="progress">
       <div class="progress-text">
         <span>Progreso</span>
@@ -271,8 +272,6 @@
       <div class="bar"><div id="progressBar"></div></div>
     </div>
   </header>
-
-  <div id="debugId" class="debug-id" aria-label="ID del bingo"></div>
 
   <main id="bingo" class="bingo" aria-label="Tablero de bingo"></main>
 
@@ -322,18 +321,9 @@ const JSON_URL = "./bingo.json";
 const STATE_KEY = "bingo_state_v4";
 const LOCAL_OPTIONS_KEY = "bingo_local_options_v4";
 
-// Fácil de ajustar para depuración.
-// 0 = casi invisible, 1 = completamente visible.
-const DEBUG_ID_OPACITY = 0.35;
-
 let BINGO_ID = "";
 let board = [];
 let checked = new Set();
-
-document.documentElement.style.setProperty(
-  "--debug-opacity",
-  DEBUG_ID_OPACITY
-);
 
 let globalOptions = [];
 
@@ -500,7 +490,7 @@ async function start() {
   try {
     const options = await loadOptions();
 
-    // Mostrar siempre el ID real que vino del bingo.json.
+    // Mostrar el ID de forma visible y destacada
     document.getElementById("debugId").textContent = `ID: ${BINGO_ID}`;
 
     const savedState = loadSavedState();
