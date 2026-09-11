@@ -1,5 +1,5 @@
 {
-  "id": "microndas",
+  "id": "oecoros",
   "options": [
     "Alguien se pierde mientras vamos al camerino",
     "Alguien se desmaya o se maluquea",
@@ -29,7 +29,9 @@
     "Le terminan a alguien",
     "Se hace una parejita",
     "Yibeth nos regaña",
-    "Alguien se resbala o cae del escenario",
-    "Se pelean"
+    "Alguien se resbala en el escenario",
+    "Se pelean",
+    "Alguien no se monta al bus",
+    "tiago hace el shh shh shh shh"
   ]
 }
